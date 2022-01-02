@@ -1,6 +1,7 @@
 package com.lemonzuo.controller;
 
 import cn.hutool.core.date.DateUtil;
+import com.lemonzuo.config.DelayedQueueConfig;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -41,6 +42,18 @@ public class SendMsgController {
         rabbitTemplate.convertAndSend("X", "XC", msg, messagePostProcessor ->{
             // 设置过期时间
             messagePostProcessor.getMessageProperties().setExpiration(expireTime);
+            return messagePostProcessor;
+        });
+    }
+
+    @ApiOperation("基于插件发送消息带过期时间")
+    @GetMapping("/sendMessageWithExpireTimeWithPlugin/{msg}/{expireTime}")
+    public void sendMessageWithExpireTimeWithPlugin(@PathVariable String msg, @PathVariable Integer expireTime) {
+        log.info("当前时间:{}, 发送一条时长:{}毫秒的消息给delayed_plugin_queue队列:{}", DateUtil.now(), expireTime, msg);
+
+        rabbitTemplate.convertAndSend(DelayedQueueConfig.DELAYED_PLUGIN_EXCHANGE_NAME, DelayedQueueConfig.DELAYED_PLUGIN_ROUTING_KEY, msg, messagePostProcessor ->{
+            // 设置过期时间
+            messagePostProcessor.getMessageProperties().setDelay(expireTime);
             return messagePostProcessor;
         });
 
