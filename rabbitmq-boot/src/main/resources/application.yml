@@ -1,0 +1,10 @@
+spring:
+  rabbitmq:
+    host: 8.134.12.132
+    port: 5672
+    username: admin
+    password: admin
+    virtual-host: /
+  web:
+    resources:
+      add-mappings: false
