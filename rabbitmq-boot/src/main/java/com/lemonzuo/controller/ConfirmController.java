@@ -35,6 +35,7 @@ public class ConfirmController {
     })
     @GetMapping("/sendConfirmMessage/{msg}")
     public void sendConfirmMessage(@PathVariable String msg) {
+        // 交换机消息发布确认
         rabbitTemplate.setConfirmCallback((CorrelationData correlationData, boolean ack, String cause) -> {
             if (ack) {
                 log.info("交换机接收消息成功: ID:{}", (correlationData != null ? correlationData.getId() : ""));
@@ -42,13 +43,23 @@ public class ConfirmController {
                 log.info("交换机未收到Id:{}的消息，原因:{}", (correlationData != null ? correlationData.getId() : ""), cause);
             }
         });
-        CorrelationData correlationData = new CorrelationData();
+        // 队列消息退回
+        rabbitTemplate.setReturnsCallback(returnCallback -> {
+            log.info("消息:{}被服务器退回,退回原因:{},交换机:{},路由Key:{}", returnCallback.getMessage().getBody(), returnCallback.getReplyText(), returnCallback.getExchange(), returnCallback.getRoutingKey());
+        });
+        CorrelationData correlationData = new CorrelationData(IdUtil.objectId());
         rabbitTemplate.convertAndSend(ConfirmConfig.EXCHANGE_NAME, ConfirmConfig.ROUTING_KEY, msg, correlationData);
-        log.info("exchangeName:{}, 发送消息内容为:{}", ConfirmConfig.EXCHANGE_NAME, msg);
+        log.info("exchangeName:{}, routingKey:{}, 发送消息内容为:{}", ConfirmConfig.EXCHANGE_NAME, ConfirmConfig.ROUTING_KEY, msg);
 
-        correlationData = new CorrelationData();
-        String exchangeName = ConfirmConfig.EXCHANGE_NAME.concat(IdUtil.randomUUID());
+        correlationData = new CorrelationData(IdUtil.objectId());
+        String exchangeName = ConfirmConfig.EXCHANGE_NAME.concat(IdUtil.objectId());
         rabbitTemplate.convertAndSend(exchangeName, ConfirmConfig.ROUTING_KEY, msg, correlationData);
-        log.info("exchangeName:{}, 发送消息内容为:{}", exchangeName, msg);
+        log.info("exchangeName:{}, routingKey:{}, 发送消息内容为:{}", exchangeName, ConfirmConfig.ROUTING_KEY, msg);
+
+        String routingKey = ConfirmConfig.ROUTING_KEY.concat(IdUtil.objectId());
+        correlationData = new CorrelationData(IdUtil.objectId());
+        rabbitTemplate.convertAndSend(ConfirmConfig.EXCHANGE_NAME, routingKey, msg, correlationData);
+        log.info("exchangeName:{}, routingKey:{}, 发送消息内容为:{}", ConfirmConfig.EXCHANGE_NAME, routingKey, msg);
+
     }
 }
