@@ -3,9 +3,10 @@ package com.lemonzuo.controller;
 import cn.hutool.core.date.DateUtil;
 import com.lemonzuo.config.DelayedQueueConfig;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.amqp.core.MessagePostProcessor;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -27,6 +28,9 @@ public class SendMsgController {
     private RabbitTemplate rabbitTemplate;
 
     @ApiOperation("发送消息")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "msg", value = "消息内容", paramType = "path")
+    })
     @GetMapping("/sendMsg/{msg}")
     public void sendMsg(@PathVariable String msg) {
         log.info("当前时间:{}, 发送一条消息给两个TTL队列:{}", DateUtil.now(), msg);
@@ -35,6 +39,10 @@ public class SendMsgController {
     }
 
     @ApiOperation("发送消息带过期时间")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "msg", value = "消息内容", paramType = "path"),
+            @ApiImplicitParam(name = "expireTime", value = "过期时间（毫秒）", paramType = "path")
+    })
     @GetMapping("/sendMessageWithExpireTime/{msg}/{expireTime}")
     public void sendMessageWithExpireTime(@PathVariable String msg, @PathVariable String expireTime) {
         log.info("当前时间:{}, 发送一条时长:{}毫秒的消息给QC队列:{}", DateUtil.now(), expireTime, msg);
@@ -47,6 +55,10 @@ public class SendMsgController {
     }
 
     @ApiOperation("基于插件发送消息带过期时间")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "msg", value = "消息内容", paramType = "path"),
+            @ApiImplicitParam(name = "expireTime", value = "过期时间（毫秒）", paramType = "path")
+    })
     @GetMapping("/sendMessageWithExpireTimeWithPlugin/{msg}/{expireTime}")
     public void sendMessageWithExpireTimeWithPlugin(@PathVariable String msg, @PathVariable Integer expireTime) {
         log.info("当前时间:{}, 发送一条时长:{}毫秒的消息给delayed_plugin_queue队列:{}", DateUtil.now(), expireTime, msg);

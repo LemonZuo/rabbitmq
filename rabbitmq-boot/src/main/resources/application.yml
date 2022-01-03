@@ -5,6 +5,7 @@ spring:
     username: admin
     password: admin
     virtual-host: /
-  web:
-    resources:
-      add-mappings: false
+    # 发布确认
+    publisher-confirm-type: correlated
+    # 消息退回
+    publisher-returns: true
